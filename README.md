@@ -3,11 +3,11 @@ anti-forensics-tool
 
 **FileForge: A File Scrambler and Timestamp Manager**
 Description:
+- Obfuscation of Payloads and Timestamp Manipulation
 
 FileForge is a Python-based desktop application designed to:
 - Scramble various file types (e.g., text, images, executables, Word documents, videos, presentations) for security or privacy reasons.
-- Modify file timestamps (creation, modification, and access times) to protect metadata or adjust file records.
-- Obfuscation of Payloads 
+- Modify file timestamps (creation, modification, and access times) to protect metadata or adjust file records. 
 
 This tool uses a simple GUI built with Tkinter and Pillow, with additional support for working with .docx and .pptx files. It's ideal for anyone needing to modify or obfuscate file metadata or content.
 
