@@ -17,7 +17,12 @@ class TimestomperApp:
     def __init__(self, root):
         self.root = root
         self.root.title("FileForge")
-        self.root.geometry("650x550")
+        self.root.geometry("650x650")
+
+        root.configure(bg='#333333')  # Change the background of the root window
+
+        label = tk.Label(root, text="Welcome to FileForge!", bg='#333333', fg='white', font=("Arial", 20, "bold"))
+        label.pack(padx=10, pady=10)
 
         # Enable access time change setting 
         self.enable_last_access_tracking()  
@@ -31,13 +36,20 @@ class TimestomperApp:
 
         # Create a notebook (tabs)
         self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill="both", expand=True)
+        self.notebook.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Add tabs
-        self.tab1 = ttk.Frame(self.notebook)
-        self.tab2 = ttk.Frame(self.notebook)
+        self.tab1 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
+        self.tab2 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.notebook.add(self.tab1, text=" Scrambler ")
         self.notebook.add(self.tab2, text=" Timestamp Update ")
+
+        # Change the appearance of the tab buttons to be equally wide
+        style = ttk.Style()
+
+        # Define a new style for the tabs to make the buttons share the width equally
+        style.configure("TNotebook.Tab", width=50, anchor="center", font=("Arial", 12, "bold"))  # Make tabs equally wide
+        style.configure("TNotebook", padding=5)  # Add padding around tabs
 
         # Initialize widgets for each tab
         self.create_tab1_widgets()
