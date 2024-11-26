@@ -1,5 +1,5 @@
 # FileForge 
-anti-forensics-tool
+Anti-forensics-tool
 
 **FileForge: A File Scrambler and Timestamp Manager**
 Description:
@@ -21,18 +21,14 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 3. File Type Detection
 - Automatically detects file types and applies relevant scrambling methods.
 
-**Installation:**
-Clone this repository: 
-git clone https://github.com/jojojogate/FileForge.git
+**Installation:** (4 Steps)
+1. Clone this repository: git clone https://github.com/jojojogate/FileForge.git
 
-Navigate to the project directory:
-cd FileForge
+2. Navigate to the project directory: cd FileForge
 
-Install required dependencies:
-pip install -r requirements.txt
+3. Install required dependencies: pip install -r requirements.txt
 
-To run the application:
-python FileForgeV3.py
+4. To run the application: python FileForgeV3.py
 
 
 **Usage**:
