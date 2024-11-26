@@ -11,6 +11,7 @@ FileForge is a Python-based desktop application designed to:
 
 This tool uses a simple GUI built with Tkinter and Pillow, with additional support for working with .docx and .pptx files. It's ideal for anyone needing to modify or obfuscate file metadata or content.
 
+
 **Features:**
 1. File Scrambler
 - Scramble contents of text files, images, executables, Word documents, MP4 videos, and PowerPoint presentations.
@@ -20,6 +21,7 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 - Supports updating creation time on Windows with the pywin32 library.
 3. File Type Detection
 - Automatically detects file types and applies relevant scrambling methods.
+
 
 **Installation:** (4 Steps)
 Step 1. Clone this repository: git clone https://github.com/jojojogate/FileForge.git
@@ -38,6 +40,7 @@ Scrambler Tab:
 2. Select the appropriate file, and the program will auto-detect the file type.
 3. Click "Scramble File" to obfuscate the content of the file.
 4. Click "Save Scrambled File" to save file with the scrambled content.
+
    
 **Timestamp Update Tab:**
 1. Click the "Select File" button to choose a file.
@@ -45,6 +48,7 @@ Scrambler Tab:
 3. Use the calendar and time input fields to specify the new timestamp.
 4. Click "Update Time" to apply the new timestamp to the selected file.
 5. You can also set the timestamp to the suggested mean timestamp calculated from other files in the same directory by clicking "Set Suggested Time".
+
 
 **Dependencies:**
 Tkinter: For GUI components.
