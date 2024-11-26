@@ -7,4 +7,3 @@ python-magic-bin==0.4.14
 pywin32==308
 tkcalendar==1.6.1
 typing_extensions==4.12.2
-f
