@@ -22,16 +22,17 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 - Automatically detects file types and applies relevant scrambling methods.
 
 **Installation:** (4 Steps)
-1. Clone this repository: git clone https://github.com/jojojogate/FileForge.git
+Step 1. Clone this repository: git clone https://github.com/jojojogate/FileForge.git
 
-2. Navigate to the project directory: cd FileForge
+Step 2. Navigate to the project directory: cd FileForge
 
-3. Install required dependencies: pip install -r requirements.txt
+Step 3. Install required dependencies: pip install -r requirements.txt
 
-4. To run the application: python FileForgeV3.py
+Step 4. To run the application: python FileForgeV3.py
 
 
-**Usage**:
+**Usage:**
+
 Scrambler Tab:
 1. Click the "Select File" button to choose a file to scramble.
 2. Select the appropriate file, and the program will auto-detect the file type.
