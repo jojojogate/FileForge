@@ -3,8 +3,6 @@ lxml==5.3.0
 pillow==11.0.0
 python-docx==1.1.2
 python-magic==0.4.27
-python-magic-bin==0.4.14
 pywin32==308
 tkcalendar==1.6.1
 typing_extensions==4.12.2
-python-libmagic 0.4.0
