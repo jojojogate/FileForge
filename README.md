@@ -24,6 +24,9 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 
 
 **Installation:** (4 Steps)
+Install Python 3.12
+Install
+
 Step 1. Clone this repository: git clone https://github.com/jojojogate/FileForge.git
 
 Step 2. Navigate to the project directory: cd FileForge
