@@ -1,6 +1,7 @@
 import os
 import io
 import magic
+import ctypes
 import random
 import zipfile
 import datetime
@@ -9,15 +10,38 @@ import tkinter as tk
 from PIL import Image
 from tkinter import ttk
 from docx import Document
+from ctypes import wintypes
 from tkcalendar import Calendar
 from tkinter import filedialog, messagebox 
 
+
+# Constants and structures for Windows SetFileTime
+FILE_ATTRIBUTE_NORMAL = 0x80
+GENERIC_WRITE = 0x40000000
+OPEN_EXISTING = 3
+
+class FILETIME(ctypes.Structure):
+    _fields_ = [("dwLowDateTime", wintypes.DWORD),
+                ("dwHighDateTime", wintypes.DWORD)]
+
+# Load kernel32.dll
+kernel32 = ctypes.windll.kernel32
+
+# Define CreateFileW and SetFileTime function prototypes
+CreateFileW = kernel32.CreateFileW
+CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+                        wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+CreateFileW.restype = wintypes.HANDLE
+
+SetFileTime = kernel32.SetFileTime
+SetFileTime.argtypes = [wintypes.HANDLE, ctypes.POINTER(FILETIME), ctypes.POINTER(FILETIME), ctypes.POINTER(FILETIME)]
+SetFileTime.restype = wintypes.BOOL
 
 class TimestomperApp:
     def __init__(self, root):
         self.root = root
         self.root.title("FileForge")
-        self.root.geometry("650x650")
+        self.root.geometry("650x700")
 
         root.configure(bg='#333333')  # Change the background of the root window
 
@@ -179,30 +203,31 @@ class TimestomperApp:
 
     def scramble_mp4_file(self):
         try:
-            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}"
-            with open(self.file_path_tab1, 'rb') as infile, open(scrambled_path, 'wb') as outfile:
-                chunk_size = 1024 * 1024  # 1 MB chunks
-                header = infile.read(1024)
-                outfile.write(header)
-                while chunk := infile.read(chunk_size):
-                    scrambled_chunk = bytearray([byte ^ 0x55 for byte in chunk])
-                    outfile.write(scrambled_chunk)
-            messagebox.showinfo("Success", f"MP4 file scrambled and saved as {scrambled_path}")
+            with open(self.file_path_tab1, 'rb') as file:
+                content = bytearray(file.read())
+
+            # Scramble non-header data (start after the first 1 KB)
+            scrambled_content = content[:1024] + bytearray([byte ^ 0x55 for byte in content[1024:]])
+            self.scrambled_content = scrambled_content
+            messagebox.showinfo("Success", "MP4 file scrambled.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble MP4 file: {e}")
 
     def scramble_ppt_file(self):
         try:
-            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}"
-            with zipfile.ZipFile(self.file_path_tab1, 'r') as pptx, zipfile.ZipFile(scrambled_path, 'w') as scrambled_pptx:
-                for item in pptx.infolist():
-                    with pptx.open(item) as file_data:
+            scrambled_data = io.BytesIO()
+            with zipfile.ZipFile(self.file_path_tab1, 'r') as pptx:
+                with zipfile.ZipFile(scrambled_data, 'w') as scrambled_pptx:
+                    for item in pptx.infolist():
+                        data = pptx.read(item.filename)
                         if item.filename.endswith('.xml') or item.filename.endswith('.rels'):
-                            scrambled_content = ''.join(chr((ord(char) + 5) % 256) for char in file_data.read().decode('utf-8', errors='ignore'))
+                            # Scramble XML and relationship files
+                            scrambled_content = ''.join(chr((ord(char) + 5) % 256) for char in data.decode('utf-8'))
                             scrambled_pptx.writestr(item, scrambled_content.encode('utf-8'))
                         else:
-                            scrambled_pptx.writestr(item, file_data.read())
-            messagebox.showinfo("Success", f"PPT file scrambled and saved as {scrambled_path}")
+                            scrambled_pptx.writestr(item, data)
+            self.scrambled_content = scrambled_data.getvalue()
+            messagebox.showinfo("Success", "PPT file scrambled.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble PPT file: {e}") 
 
@@ -309,9 +334,9 @@ class TimestomperApp:
         self.tab2_suggestion_label.grid(row=8, column=0, columnspan=4, pady=10)
 
         # Buttons for Tab 2
-        self.tab2_update_button = tk.Button(self.tab2, text="Update Time", command=self.update_file_time_tab2)
-        self.tab2_update_button.grid(row=9, column=0, columnspan=2, pady=10)
-        self.tab2_set_suggested_button = tk.Button(self.tab2, text="Set Suggested Time", command=self.set_suggested_time_tab2)
+        self.tab2_update_button = tk.Button(self.tab2, text="Update Time", command=self.update_file_time)
+        self.tab2_update_button.grid(row=10, column=2, columnspan=2, pady=10)
+        self.tab2_set_suggested_button = tk.Button(self.tab2, text="Set Suggested Time", command=self.set_suggested_time)
         self.tab2_set_suggested_button.grid(row=9, column=2, columnspan=2, pady=10)
 
     def select_file_tab2(self):
@@ -358,128 +383,107 @@ class TimestomperApp:
         except Exception as e:
             messagebox.showerror("Error", f"Could not calculate mean timestamp: {e}")
             return None
+        
+    def convert_to_filetime(self, input_time):
+        """Convert user input time to FILETIME format (100-nanosecond intervals since 1601)."""
+        try:
+            # Ensure proper length of the input
+            if len(input_time) != 20:
+                raise ValueError(f"Invalid input length. Expected 20 characters, but got {len(input_time)}.")
+            
+            # Parse the input string in the format "YYYYMMDDHHMMSSssssss"
+            year = int(input_time[0:4])
+            month = int(input_time[4:6])
+            day = int(input_time[6:8])
+            hour = int(input_time[8:10])
+            minute = int(input_time[10:12])
+            second = int(input_time[12:14])
+            microseconds = int(input_time[14:20])  # Microseconds (6 digits)
 
-    def update_file_time_tab2(self):
-        """Update the selected file's timestamp based on user inputs."""
-        if not self.file_path_tab2:
-            messagebox.showerror("Error", "Please select a file first.")
-            return # Exit the function if no file is selected
+            # Ensure the microseconds are valid (should be in the range 0-999999)
+            if microseconds < 0 or microseconds > 999999:
+                raise ValueError("Microseconds should be between 0 and 999999.")
 
-        # Get the selected date from the calendar widget
+            # Construct a datetime object
+            dt = datetime.datetime(year, month, day, hour, minute, second, microseconds)
+
+            # Convert to FILETIME (100-nanosecond intervals since January 1, 1601)
+            timestamp = dt.timestamp()  # Seconds since epoch
+            filetime_value = int(timestamp * 10000000 + 116444736000000000)
+            filetime = FILETIME(filetime_value & 0xFFFFFFFF, (filetime_value >> 32) & 0xFFFFFFFF)
+
+            return filetime
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not convert time: {e}")
+            return None    
+
+    def update_file_time(self):
+        """Update the file time based on user input."""
+        # Get date from calendar
         selected_date = self.calendar.get_date()
-        try:
-            # Get time components from entry fields
-            hours = self.hours_entry.get().zfill(2)
-            minutes = self.minutes_entry.get().zfill(2)
-            seconds = self.seconds_entry.get().zfill(2)
-            microseconds = self.microseconds_entry.get().zfill(6)
+        month, day, year = map(int, selected_date.split('/'))
 
-            # Validate that the entered time components are numeric
-            if not (hours.isdigit() and minutes.isdigit() and seconds.isdigit() and microseconds.isdigit()):
-                raise ValueError("Time components must be numeric.")
+        # Get time from text fields (HH, MM, SS, microseconds)
+        hours = self.hours_entry.get().zfill(2)  # Ensure two digits
+        minutes = self.minutes_entry.get().zfill(2)
+        seconds = self.seconds_entry.get().zfill(2)
+        microseconds = self.microseconds_entry.get().zfill(6)  # Ensure six digits
 
-            # Create a time string with the format HH:MM:SS.ssssss from the user input
-            time_str = f"{hours}:{minutes}:{seconds}.{microseconds}"
-            date_time_str = selected_date + ' ' + time_str
-            desired_time = datetime.datetime.strptime(date_time_str, '%m/%d/%Y %H:%M:%S.%f')
-            desired_timestamp = desired_time.timestamp()
+        # Construct the input_time string (YYYYMMDDHHMMSSssssss)
+        input_time = f"{year:04d}{month:02d}{day:02d}{hours}{minutes}{seconds}{microseconds}"
 
-            # Get the current access and modification times of the selected file
-            atime = os.stat(self.file_path_tab2).st_atime
-            mtime = os.stat(self.file_path_tab2).st_mtime
+        # Debugging: print the constructed time string
+        print(f"Constructed input time: {input_time}")
 
-            # Update access time if selected
-            if self.access_var.get():
-                atime = desired_timestamp
-            
-            # Update modification time if selected
-            if self.modification_var.get():
-                mtime = desired_timestamp
-            
-            # Apply the new times
-            os.utime(self.file_path_tab2, (atime, mtime))
-
-            # Update creation time if selected
-            if self.creation_var.get():
-                try:
-                    import win32file, pywintypes
-                    handle = win32file.CreateFile(
-                        self.file_path_tab2,
-                        win32file.GENERIC_WRITE,
-                        0,
-                        None,
-                        win32file.OPEN_EXISTING,
-                        0,
-                        None
-                    )
-                    # Set the creation time to the desired time
-                    win32file.SetFileTime(
-                        handle,
-                        pywintypes.Time(desired_time),  # Creation time
-                        None,
-                        None
-                    )
-                    handle.close()
-                except ImportError:
-                    messagebox.showerror("Error", "Creation time update requires pywin32 on Windows.")
-            messagebox.showinfo("Success", "File timestamps updated successfully!")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to update file timestamps: {e}")
-
-    def set_suggested_time_tab2(self):
-        """Set the file's timestamp to the suggested mean timestamp."""
-        if not self.file_path_tab2:
-            messagebox.showerror("Error", "Please select a file first.")
+        # Validate the length of the input string
+        if len(input_time) != 20:
+            messagebox.showerror("Invalid Input", "Time format should be 20 characters long (YYYYMMDDHHMMSSssssss).")
             return
 
-        # Ensure the suggested timestamp has already been calculated
+        # Convert to FILETIME
+        filetime = self.convert_to_filetime(input_time)
+        if not filetime:
+            return
+
+        # Open the file and set timestamps
+        handle = CreateFileW(self.file_path_tab2, GENERIC_WRITE, 0, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, None)
+        if handle == -1:
+            messagebox.showerror("Error", "Could not open file to modify.")
+            return
+
+        # Update the file timestamps if the checkboxes are selected
+        if self.creation_var.get():
+            SetFileTime(handle, ctypes.pointer(filetime), None, None)
+        
+        if self.modification_var.get():
+            SetFileTime(handle, None, ctypes.pointer(filetime), None)
+
+        if self.access_var.get():
+            SetFileTime(handle, None, None, ctypes.pointer(filetime))
+
+        # Close the handle
+        kernel32.CloseHandle(handle)
+        
+        messagebox.showinfo("Info", "File timestamps successfully updated.")
+
+    def set_suggested_time(self):
+        """Set the suggested time to the input fields."""
         if not self.suggested_timestamp_tab2:
-            messagebox.showerror("Error", "Suggested timestamp is not available.")
+            messagebox.showerror("Error", "No suggested timestamp available.")
             return
+        
+        # Populate the time input fields with the suggested timestamp
+        self.hours_entry.delete(0, tk.END)
+        self.minutes_entry.delete(0, tk.END)
+        self.seconds_entry.delete(0, tk.END)
+        self.microseconds_entry.delete(0, tk.END)
 
-        try:
-            # Convert the suggested timestamp to timestamp format
-            desired_timestamp = self.suggested_timestamp_tab2.timestamp()
-
-            # Get current access and modification times of the file
-            atime = os.stat(self.file_path_tab2).st_atime
-            mtime = os.stat(self.file_path_tab2).st_mtime
-
-            # Update access time if selected
-            if self.access_var.get():
-                atime = desired_timestamp
-            # Update modification time if selected
-            if self.modification_var.get():
-                mtime = desired_timestamp
-
-            # Apply the new times
-            os.utime(self.file_path_tab2, (atime, mtime))
-
-            # Update creation time if selected
-            if self.creation_var.get():
-                try:
-                    import win32file, pywintypes
-                    handle = win32file.CreateFile(
-                        self.file_path_tab2,
-                        win32file.GENERIC_WRITE,
-                        0,
-                        None,
-                        win32file.OPEN_EXISTING,
-                        0,
-                        None
-                    )
-                    win32file.SetFileTime(
-                        handle,
-                        pywintypes.Time(self.suggested_timestamp_tab2),
-                        None,
-                        None
-                    )
-                    handle.close()
-                except ImportError:
-                    messagebox.showerror("Error", "Creation time update requires pywin32 on Windows.")
-            messagebox.showinfo("Success", "File timestamps updated to the suggested time!")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to set suggested time: {e}")
+        # Fill in the time entries
+        self.hours_entry.insert(0, self.suggested_timestamp_tab2.strftime('%H'))
+        self.minutes_entry.insert(0, self.suggested_timestamp_tab2.strftime('%M'))
+        self.seconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%S'))
+        self.microseconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%f'))
 
     def enable_last_access_tracking(self): 
         subprocess.run("fsutil behavior set disablelastaccess 1", shell=True)
