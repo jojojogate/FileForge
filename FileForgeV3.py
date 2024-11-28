@@ -179,31 +179,30 @@ class TimestomperApp:
 
     def scramble_mp4_file(self):
         try:
-            with open(self.file_path_tab1, 'rb') as file:
-                content = bytearray(file.read())
-
-            # Scramble non-header data (start after the first 1 KB)
-            scrambled_content = content[:1024] + bytearray([byte ^ 0x55 for byte in content[1024:]])
-            self.scrambled_content = scrambled_content
-            messagebox.showinfo("Success", "MP4 file scrambled.")
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}"
+            with open(self.file_path_tab1, 'rb') as infile, open(scrambled_path, 'wb') as outfile:
+                chunk_size = 1024 * 1024  # 1 MB chunks
+                header = infile.read(1024)
+                outfile.write(header)
+                while chunk := infile.read(chunk_size):
+                    scrambled_chunk = bytearray([byte ^ 0x55 for byte in chunk])
+                    outfile.write(scrambled_chunk)
+            messagebox.showinfo("Success", f"MP4 file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble MP4 file: {e}")
 
     def scramble_ppt_file(self):
         try:
-            scrambled_data = io.BytesIO()
-            with zipfile.ZipFile(self.file_path_tab1, 'r') as pptx:
-                with zipfile.ZipFile(scrambled_data, 'w') as scrambled_pptx:
-                    for item in pptx.infolist():
-                        data = pptx.read(item.filename)
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}"
+            with zipfile.ZipFile(self.file_path_tab1, 'r') as pptx, zipfile.ZipFile(scrambled_path, 'w') as scrambled_pptx:
+                for item in pptx.infolist():
+                    with pptx.open(item) as file_data:
                         if item.filename.endswith('.xml') or item.filename.endswith('.rels'):
-                            # Scramble XML and relationship files
-                            scrambled_content = ''.join(chr((ord(char) + 5) % 256) for char in data.decode('utf-8'))
+                            scrambled_content = ''.join(chr((ord(char) + 5) % 256) for char in file_data.read().decode('utf-8', errors='ignore'))
                             scrambled_pptx.writestr(item, scrambled_content.encode('utf-8'))
                         else:
-                            scrambled_pptx.writestr(item, data)
-            self.scrambled_content = scrambled_data.getvalue()
-            messagebox.showinfo("Success", "PPT file scrambled.")
+                            scrambled_pptx.writestr(item, file_data.read())
+            messagebox.showinfo("Success", f"PPT file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble PPT file: {e}") 
 
