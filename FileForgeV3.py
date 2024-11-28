@@ -46,10 +46,7 @@ class TimestomperApp:
         root.configure(bg='#333333')  # Change the background of the root window
 
         label = tk.Label(root, text="Welcome to FileForge!", bg='#333333', fg='white', font=("Arial", 20, "bold"))
-        label.pack(padx=10, pady=10)
-
-        # Enable access time change setting 
-        self.enable_last_access_tracking()  
+        label.pack(padx=10, pady=10) 
 
         # Separate file path variables for each tab
         self.file_path_tab1 = None
@@ -270,7 +267,7 @@ class TimestomperApp:
             return "Unknown"
 
 #
-#               2nd Part                #
+#               2nd Tab                #
 #
     def create_tab2_widgets(self):
         """Tab 2 - Select File and Update Timestamp"""
@@ -485,14 +482,7 @@ class TimestomperApp:
         self.seconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%S'))
         self.microseconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%f'))
 
-    def enable_last_access_tracking(self): 
-        subprocess.run("fsutil behavior set disablelastaccess 1", shell=True)
-
-    def disable_last_access_tracking(self): 
-        subprocess.run("fsutil behavior set disablelastaccess 0", shell=True) 
-
     def on_close(self): 
-        self.disable_last_access_tracking() 
         self.root.destroy()
 
 if __name__ == "__main__":
