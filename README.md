@@ -1,6 +1,7 @@
 # FileForge 
 Anti-forensics-tool
 
+
 **FileForge: A File Scrambler and Timestamp Manager**
 Description:
 - Obfuscation of Payloads and Timestamp Manipulation
@@ -12,6 +13,7 @@ FileForge is a Python-based desktop application designed to:
 This tool uses a simple GUI built with Tkinter and Pillow, with additional support for working with .docx and .pptx files. It's ideal for anyone needing to modify or obfuscate file metadata or content.
 
 
+
 **Features:**
 1. File Scrambler
 - Scramble contents of text files, images, executables, Word documents, MP4 videos, and PowerPoint presentations.
@@ -21,6 +23,7 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 - Supports updating creation time on Windows with the pywin32 library.
 3. File Type Detection
 - Automatically detects file types and applies relevant scrambling methods.
+
 
 
 **Installation:** (6 Steps)
@@ -38,6 +41,7 @@ Step 5. Install required dependencies: pip install -r requirements.txt
 Step 6. To run the application(as Administrator): python FileForgeV3.py
 
 
+
 **Usage:**
 
 Scrambler Tab:
@@ -46,6 +50,7 @@ Scrambler Tab:
 3. Click "Scramble File" to obfuscate the content of the file.
 4. Click "Save Scrambled File" to save file with the scrambled content.
 
+
    
 **Timestamp Update Tab:**
 1. Click the "Select File" button to choose a file.
@@ -53,6 +58,7 @@ Scrambler Tab:
 3. Use the calendar and time input fields to specify the new timestamp.
 4. Click "Update Time" to apply the new timestamp to the selected file.
 5. You can also set the timestamp to the suggested mean timestamp calculated from other files in the same directory by clicking "Set Suggested Time".
+
 
 
 **Dependencies:**
