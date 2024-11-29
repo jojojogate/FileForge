@@ -50,9 +50,13 @@ Scrambler Tab:
 
 # Dependencies:
 Tkinter: For GUI components.
+
 Pillow: For image processing.
+
 python-magic: For file type identification.
+
 python-docx: For handling .docx files.
+
 pywin32: For manipulating file creation times on Windows.
 
 # Known Issues:
