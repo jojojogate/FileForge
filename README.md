@@ -33,19 +33,21 @@ Step 6. To run the application: python FileForgeV4.py
 
 # Usage:
 
-Scrambler Tab:
-1. Click the "Select File" button to choose a file to scramble.
-2. Select the appropriate file, and the program will auto-detect the file type.
-3. Click "Scramble File" to obfuscate the content of the file.
-4. Click "Save Scrambled File" to save file with the scrambled content.
+**Scrambler Tab:**
+1. Click on the "Scrambler" Tab
+2. Click the "Select File" button to choose a file to scramble.
+3. Select the appropriate file, and the program will auto-detect the file type.
+4. Click "Scramble File" to obfuscate the content of the file.
+5. Click "Save Scrambled File" to save file with the scrambled content.
 
    
 **Timestamp Update Tab:**
-1. Click the "Select File" button to choose a file.
-2. Use the checkboxes to select which timestamps to modify (Creation, Modification, or Access).
-3. Use the calendar and time input fields to specify the new timestamps.
-4. Use the "Set Suggested Time" button to fill the boxes with the calculated mean timestamp of the other files in the same directory. (Optional)
-5. Click "Update Time" to apply the new timestamp to the selected file.
+1. Click on the "Timestamp Update" Tab
+2. Click the "Select File" button to choose a file.
+3. Use the checkboxes to select which timestamps to modify (Creation, Modification, or Access).
+4. Use the calendar and time input fields to specify the new timestamps.
+5. Use the "Set Suggested Time" button to fill the boxes with the calculated mean timestamp of the other files in the same directory. (Optional)
+6. Click "Update Time" to apply the new timestamp to the selected file.
 
 
 # Dependencies:
