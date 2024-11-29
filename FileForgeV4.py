@@ -51,6 +51,8 @@ class TimestomperApp:
         # Separate file path variables for each tab
         self.file_path_tab1 = None
         self.file_path_tab2 = None
+        self.file_path_tab3 = None
+
 
         # Suggested timestamp for tab2
         self.suggested_timestamp_tab2 = None
@@ -62,8 +64,11 @@ class TimestomperApp:
         # Add tabs
         self.tab1 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.tab2 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
+        self.tab3 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
+
         self.notebook.add(self.tab1, text=" Scrambler ")
         self.notebook.add(self.tab2, text=" Timestamp Update ")
+        self.notebook.add(self.tab3, text=" Decoy Generator ")
 
         # Change the appearance of the tab buttons to be equally wide
         style = ttk.Style()
@@ -75,6 +80,7 @@ class TimestomperApp:
         # Initialize widgets for each tab
         self.create_tab1_widgets()
         self.create_tab2_widgets()
+        self.create_tab3_widgets()
     
     def create_tab1_widgets(self):
         # Tab 1 - File Scrambler
@@ -509,7 +515,94 @@ class TimestomperApp:
         self.minutes_entry.insert(0, self.suggested_timestamp_tab2.strftime('%M'))
         self.seconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%S'))
         self.microseconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%f'))
+    def create_tab3_widgets(self):
+        """Tab 3 - Junk Decoy File Generator"""
+        # Title Label
+        self.tab3_label = tk.Label(self.tab3, text="Junk Decoy File Generator", font=("Arial", 14, "bold"))
+        self.tab3_label.grid(row=0, column=0, columnspan=2, pady=10)
 
+        # Directory Selection
+        self.tab3_directory_label = tk.Label(self.tab3, text="Target Directory:")
+        self.tab3_directory_label.grid(row=1, column=0, sticky="e", padx=5, pady=5)
+        self.tab3_directory_entry = tk.Entry(self.tab3, width=50)
+        self.tab3_directory_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        # Browse Button
+        self.tab3_browse_button = tk.Button(self.tab3, text="Browse", command=self.select_directory_tab3)
+        self.tab3_browse_button.grid(row=1, column=2, padx=5, pady=5)
+
+        # Number of Files
+        self.tab3_num_files_label = tk.Label(self.tab3, text="Number of Decoy Files:")
+        self.tab3_num_files_label.grid(row=2, column=0, sticky="e", padx=5, pady=5)
+        self.tab3_num_files_entry = tk.Entry(self.tab3, width=10)
+        self.tab3_num_files_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        # Generate Button
+        self.tab3_generate_button = tk.Button(self.tab3, text="Generate Decoy Files", command=self.generate_decoy_files)
+        self.tab3_generate_button.grid(row=3, column=0, columnspan=3, pady=10)
+
+        # Status Label
+        self.tab3_status_label = tk.Label(self.tab3, text="Status: Ready", font=("Arial", 10, "italic"))
+        self.tab3_status_label.grid(row=4, column=0, columnspan=3, pady=5)
+
+    def select_directory_tab3(self):
+        """Open a directory selection dialog for Tab 3."""
+        directory = filedialog.askdirectory(title="Select Directory")
+        if directory:
+            self.tab3_directory_entry.delete(0, tk.END)
+            self.tab3_directory_entry.insert(0, directory)
+
+    def generate_decoy_files(self):
+        """Generate junk decoy files in the specified directory."""
+        target_directory = self.tab3_directory_entry.get().strip()
+        if not os.path.isdir(target_directory):
+            messagebox.showerror("Error", "Please select a valid directory.")
+            return
+
+        try:
+            num_files = int(self.tab3_num_files_entry.get().strip())
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid number for decoy files.")
+            return
+
+        if num_files <= 0:
+            messagebox.showerror("Error", "Number of decoy files must be greater than zero.")
+            return
+
+        try:
+            # Generate junk decoy files
+            self.create_junk_decoy_files(target_directory, num_files)
+            self.tab3_status_label.config(text=f"Status: Successfully created {num_files} decoy files.")
+            messagebox.showinfo("Success", f"{num_files} decoy files created in {target_directory}.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to create decoy files: {e}")
+
+    def create_junk_decoy_files(self, directory, num_files):
+        """Create a specified number of junk decoy files in the target directory."""
+        # List of plausible but slightly suspicious file names
+        suspicious_names = [
+            "temp_data", "logfile", "update_patch", "sys_driver", "error_dump",
+            "cache", "runtime_config", "sys_backup", "data_store", "debug_log"
+        ]
+        # Extensions that appear legitimate
+        suspicious_extensions = ["dat", "bin", "tmp", "log"]
+
+        for _ in range(num_files):
+            file_name = random.choice(suspicious_names) + f"_{random.randint(100, 999)}"
+            file_extension = random.choice(suspicious_extensions)
+            self.create_junk_decoy_file(directory, file_name, file_extension)
+
+    def create_junk_decoy_file(self, directory, file_name, file_extension):
+        """Create a single decoy file with random junk content."""
+        file_size = random.randint(1024, 8192)  # Random size between 1 KB and 8 KB
+        decoy_path = os.path.join(directory, f"{file_name}.{file_extension}")
+
+        try:
+            content = os.urandom(file_size)
+            with open(decoy_path, 'wb') as decoy_file:
+                decoy_file.write(content)
+        except Exception as e:
+            print(f"Error creating decoy file {file_name}: {e}")
     def on_close(self): 
         self.root.destroy()
 
