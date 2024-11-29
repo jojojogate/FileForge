@@ -96,8 +96,8 @@ class TimestomperApp:
         self.scramble_button.grid(pady=10)
 
         # Save Button
-        self.save_button = tk.Button(self.tab1, text="Save Scrambled File", command=self.save_scrambled_file, state=tk.DISABLED)
-        self.save_button.grid(pady=10)
+        #self.save_button = tk.Button(self.tab1, text="Save Scrambled File", command=self.save_scrambled_file, state=tk.DISABLED)
+        #self.save_button.grid(pady=10)
     
     #File type checking
     def scramble_file(self):
@@ -120,19 +120,26 @@ class TimestomperApp:
 
     def scramble_text_file(self):
         try:
-            # Read the file content
-            with open(self.file_path_tab1, 'r', encoding='utf-8') as file:
-                content = file.read()
+            # Define the scrambled file path
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled.txt"
             
-            # Scramble content by shifting character codes
-            scrambled = ''.join([chr((ord(char) + 5) % 256) for char in content])
-            self.scrambled_content = scrambled
-            messagebox.showinfo("Success", "Text file scrambled.")
+            # Open the input and output files
+            with open(self.file_path_tab1, 'r', encoding='utf-8') as infile, open(scrambled_path, 'w', encoding='utf-8') as outfile:
+                # Process the file line by line
+                for line in infile:
+                    # Scramble content by shifting character codes
+                    scrambled_line = ''.join([chr((ord(char) + 5) % 256) for char in line])
+                    outfile.write(scrambled_line)
+            
+            messagebox.showinfo("Success", f"Text file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble text file: {e}")
 
     def scramble_image_file(self):
         try:
+            # Define the scrambled file path
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled.png"
+            
             # Open the image and apply a basic scrambling
             with Image.open(self.file_path_tab1) as img:
                 # Convert image to RGB if not already
@@ -146,57 +153,79 @@ class TimestomperApp:
                 scrambled_img = Image.new(img.mode, img.size)
                 scrambled_img.putdata(pixels)
                 
-                # Save the scrambled image in memory
-                output = io.BytesIO()
-                scrambled_img.save(output, format="PNG")
-                self.scrambled_content = output.getvalue()
+                # Save the scrambled image to disk
+                scrambled_img.save(scrambled_path, format="PNG")
                 
-                messagebox.showinfo("Success", "Image file scrambled.")
+                messagebox.showinfo("Success", f"Image file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble image file: {e}")
 
     def scramble_executable_file(self):
         try:
-            # Read the binary content of the executable file
-            with open(self.file_path_tab1, 'rb') as file:
-                content = bytearray(file.read())
-            
-            # Apply scrambling by flipping each byte (XOR with 0xFF)
-            scrambled_content = bytearray([byte ^ 0xFF for byte in content])
-            self.scrambled_content = scrambled_content
-            
-            messagebox.showinfo("Success", "Executable file scrambled.")
+            # Define the scrambled file path
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled.exe"
+
+            # Open the input file in binary read mode and output file in binary write mode
+            with open(self.file_path_tab1, 'rb') as infile, open(scrambled_path, 'wb') as outfile:
+                # Process the file in chunks to handle large files
+                chunk_size = 4096  # Process 4 KB at a time
+                while chunk := infile.read(chunk_size):
+                    # Scramble each byte by flipping it (XOR with 0xFF)
+                    scrambled_chunk = bytearray([byte ^ 0xFF for byte in chunk])
+                    outfile.write(scrambled_chunk)
+
+            # Notify user of success
+            messagebox.showinfo("Success", f"Executable file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble executable file: {e}")
 
+
     def scramble_docx_file(self): 
-        # scrambling text and images in DOCX file
         try: 
-            doc = Document(self.file_path_tab1) 
-            for paragraph in doc.paragraphs: 
-                for run in paragraph.runs: 
-                    if run.text: 
-                        scrambled_text = ''.join([chr((ord(char) + 5) % 256) for char in run.text]) 
-                        run.text = scrambled_text 
-            for rel in doc.part.rels.values(): 
-                if "image" in rel.target_ref: 
-                    image_stream = io.BytesIO(rel.target_part.blob) 
-                    img = Image.open(image_stream) 
-                    img = img.convert("RGB") 
-                    pixels = list(img.getdata()) 
-                    random.shuffle(pixels) 
-                    scrambled_img = Image.new(img.mode, img.size) 
-                    scrambled_img.putdata(pixels) 
-                    scrambled_stream = io.BytesIO() 
-                    scrambled_img.save(scrambled_stream, format="PNG") 
-                    scrambled_stream.seek(0) 
-                    rel.target_part._blob = scrambled_stream.read() 
-            output = io.BytesIO() 
-            doc.save(output) 
-            self.scrambled_content = output.getvalue() 
-            messagebox.showinfo("Success", "DOCX file scrambled.") 
-        except Exception as e: 
-            messagebox.showerror("Error", f"Failed to scramble DOCX file: {e}") 
+            # Define the scrambled file path
+            scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled.docx"
+
+            # Open the DOCX file
+            doc = Document(self.file_path_tab1)
+
+            # Scramble text content in the DOCX file
+            for paragraph in doc.paragraphs:
+                for run in paragraph.runs:
+                    if run.text:
+                        scrambled_text = ''.join(
+                            chr(((ord(char) - 32 + 5) % 95) + 32) if 32 <= ord(char) <= 126 else char
+                            for char in run.text
+                        )
+                        run.text = scrambled_text
+
+            # Scramble embedded images in the DOCX file
+            for rel in doc.part.rels.values():
+                if "image" in rel.target_ref:  # Check if the relationship target is an image
+                    image_stream = io.BytesIO(rel.target_part.blob)
+                    img = Image.open(image_stream)
+                    img = img.convert("RGB")
+
+                    # Shuffle pixels to scramble the image
+                    pixels = list(img.getdata())
+                    random.shuffle(pixels)
+                    scrambled_img = Image.new(img.mode, img.size)
+                    scrambled_img.putdata(pixels)
+
+                    # Save the scrambled image back to the relationship
+                    scrambled_stream = io.BytesIO()
+                    scrambled_img.save(scrambled_stream, format="PNG")
+                    scrambled_stream.seek(0)
+                    rel.target_part._blob = scrambled_stream.read()
+
+            # Save the scrambled DOCX file to disk
+            doc.save(scrambled_path)
+
+            # Notify the user of success
+            messagebox.showinfo("Success", f"DOCX file scrambled and saved as {scrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to scramble DOCX file: {e}")
+
+
 
     def scramble_mp4_file(self):
         try:
@@ -225,7 +254,7 @@ class TimestomperApp:
                             scrambled_pptx.writestr(item, file_data.read())
             messagebox.showinfo("Success", f"PPT file scrambled and saved as {scrambled_path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to scramble PPT file: {e}")
+            messagebox.showerror("Error", f"Failed to scramble PPT file: {e}") 
 
     def save_scrambled_file(self): 
         if self.scrambled_content: 
