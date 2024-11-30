@@ -29,7 +29,7 @@ Step 4. Navigate to the project directory: cd FileForge
 
 Step 5. Install required dependencies: pip install -r requirements.txt
 
-Step 6. To run the application: python FileForgeV4.py
+Step 6. To run the application(run as administrator): python FileForgeV4.py
 
 # Usage:
 
