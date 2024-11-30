@@ -266,7 +266,7 @@ class TimestomperApp:
             self.unscramble_text_file()
         elif "image" in self.file_type:
             self.unscramble_image_file()
-        elif "application" in self.file_type and "exe" in self.file_type:
+        elif "application" in self.file_type and self.file_path_tab1.endswith(".exe"):
             self.unscramble_executable_file()
         elif "application" in self.file_type and "vnd.openxmlformats-officedocument.wordprocessingml.document" in self.file_type: 
             self.unscramble_docx_file()
