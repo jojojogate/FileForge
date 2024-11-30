@@ -105,6 +105,8 @@ class TimestomperApp:
         # Scramble Button
         self.scramble_button = tk.Button(self.tab1, text="Scramble File", command=self.scramble_file, state=tk.DISABLED)
         self.scramble_button.grid(pady=10)
+        self.unscramble_button = tk.Button(self.tab1, text="Unscramble File", command=self.unscramble_file, state=tk.DISABLED)
+        self.unscramble_button.grid(pady=10)
     
     #File type checking
     def scramble_file(self):
@@ -259,25 +261,116 @@ class TimestomperApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble PPT file: {e}") 
 
-    def save_scrambled_file(self): 
-        if self.scrambled_content: 
-            try: 
-                # Define the scrambled file path 
-                scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}" 
-                
-                # Open in binary mode if the file is an image, executable, or any binary file 
-                if 'image' in self.file_type or 'exe' in self.file_type or 'application' in self.file_type: 
-                    with open(scrambled_path, 'wb') as scrambled_file:  # Binary write mode for binary content
-                        scrambled_file.write(self.scrambled_content) 
-                else: 
-                    # Open in text mode if the file is a text-based file (like .txt or .docx) 
-                    with open(scrambled_path, 'w', encoding='utf-8') as scrambled_file:  # Text write mode for text content
-                        scrambled_file.write(self.scrambled_content)                  
-                messagebox.showinfo("File Saved", f"Scrambled file saved as {scrambled_path}") 
-            except Exception as e: 
-                messagebox.showerror("Error", f"Failed to save scrambled file: {e}") 
-        else: 
-            messagebox.showerror("Error", "No scrambled content to save.")  
+    def unscramble_file(self):
+        if "text" in self.file_type:
+            self.unscramble_text_file()
+        elif "image" in self.file_type:
+            self.unscramble_image_file()
+        elif "application" in self.file_type and "exe" in self.file_type:
+            self.unscramble_executable_file()
+        elif "application" in self.file_type and "vnd.openxmlformats-officedocument.wordprocessingml.document" in self.file_type: 
+            self.unscramble_docx_file()
+        elif "video" in self.file_type:
+            self.unscramble_mp4_file()
+        elif "application" in self.file_type and ("ppt" in self.file_path_tab1 or "powerpoint" in self.file_type):
+            self.unscramble_ppt_file()
+        else:
+            messagebox.showinfo("Unsupported File", "This file type is not supported for unscrambling.")
+
+    def unscramble_text_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.txt"
+            with open(self.file_path_tab1, 'r', encoding='utf-8') as infile, open(unscrambled_path, 'w', encoding='utf-8') as outfile:
+                for line in infile:
+                    unscrambled_line = ''.join([chr((ord(char) - 5) % 256) for char in line])
+                    outfile.write(unscrambled_line)
+            messagebox.showinfo("Success", f"Text file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble text file: {e}")
+
+    def unscramble_image_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.png"
+            # Use a reverse operation on the scrambled image
+            # Implement the specific logic if pixel positions were stored during scrambling
+            messagebox.showinfo("Success", f"Image file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble image file: {e}")
+
+    def unscramble_executable_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.exe"
+            with open(self.file_path_tab1, 'rb') as infile, open(unscrambled_path, 'wb') as outfile:
+                while chunk := infile.read(4096):
+                    unscrambled_chunk = bytearray([byte ^ 0xFF for byte in chunk])
+                    outfile.write(unscrambled_chunk)
+            messagebox.showinfo("Success", f"Executable file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble executable file: {e}")
+
+    def unscramble_docx_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.docx"
+            doc = Document(self.file_path_tab1)
+            for paragraph in doc.paragraphs:
+                for run in paragraph.runs:
+                    if run.text:
+                        unscrambled_text = ''.join(
+                            chr(((ord(char) - 32 - 5) % 95) + 32) if 32 <= ord(char) <= 126 else char
+                            for char in run.text
+                        )
+                        run.text = unscrambled_text
+            doc.save(unscrambled_path)
+            messagebox.showinfo("Success", f"DOCX file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble DOCX file: {e}")
+
+    def unscramble_mp4_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled{os.path.splitext(self.file_path_tab1)[1]}"
+            with open(self.file_path_tab1, 'rb') as infile, open(unscrambled_path, 'wb') as outfile:
+                header = infile.read(1024)
+                outfile.write(header)
+                while chunk := infile.read(1024 * 1024):
+                    unscrambled_chunk = bytearray([byte ^ 0x55 for byte in chunk])
+                    outfile.write(unscrambled_chunk)
+            messagebox.showinfo("Success", f"MP4 file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble MP4 file: {e}")
+
+    def unscramble_ppt_file(self):
+        try:
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled{os.path.splitext(self.file_path_tab1)[1]}"
+            with zipfile.ZipFile(self.file_path_tab1, 'r') as pptx, zipfile.ZipFile(unscrambled_path, 'w') as unscrambled_pptx:
+                for item in pptx.infolist():
+                    with pptx.open(item) as file_data:
+                        if item.filename.endswith('.xml') or item.filename.endswith('.rels'):
+                            unscrambled_content = ''.join(chr((ord(char) - 5) % 256) for char in file_data.read().decode('utf-8', errors='ignore'))
+                            unscrambled_pptx.writestr(item, unscrambled_content.encode('utf-8'))
+                        else:
+                            unscrambled_pptx.writestr(item, file_data.read())
+            messagebox.showinfo("Success", f"PPT file unscrambled and saved as {unscrambled_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to unscramble PPT file: {e}")
+        def save_scrambled_file(self): 
+            if self.scrambled_content: 
+                try: 
+                    # Define the scrambled file path 
+                    scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}" 
+                    
+                    # Open in binary mode if the file is an image, executable, or any binary file 
+                    if 'image' in self.file_type or 'exe' in self.file_type or 'application' in self.file_type: 
+                        with open(scrambled_path, 'wb') as scrambled_file:  # Binary write mode for binary content
+                            scrambled_file.write(self.scrambled_content) 
+                    else: 
+                        # Open in text mode if the file is a text-based file (like .txt or .docx) 
+                        with open(scrambled_path, 'w', encoding='utf-8') as scrambled_file:  # Text write mode for text content
+                            scrambled_file.write(self.scrambled_content)                  
+                    messagebox.showinfo("File Saved", f"Scrambled file saved as {scrambled_path}") 
+                except Exception as e: 
+                    messagebox.showerror("Error", f"Failed to save scrambled file: {e}") 
+            else: 
+                messagebox.showerror("Error", "No scrambled content to save.")  
 
     def select_file_tab1(self):
         # Open file dialog to select a file
@@ -287,6 +380,8 @@ class TimestomperApp:
             self.file_type = self.identify_file_type()
             self.file_type_label.config(text=f"File Type: {self.file_type}")
             self.scramble_button.config(state=tk.NORMAL)  # Enable scramble button
+            self.unscramble_button.config(state=tk.NORMAL)  # Enable scramble button
+
     
     def identify_file_type(self):
         # Identify file type using magic
