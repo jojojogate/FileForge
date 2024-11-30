@@ -5,7 +5,6 @@ import ctypes
 import random
 import zipfile
 import datetime
-import subprocess
 import tkinter as tk
 from PIL import Image
 from tkinter import ttk
@@ -20,14 +19,15 @@ FILE_ATTRIBUTE_NORMAL = 0x80
 GENERIC_WRITE = 0x40000000
 OPEN_EXISTING = 3
 
+# Define FILETIME structure to handle file times
 class FILETIME(ctypes.Structure):
     _fields_ = [("dwLowDateTime", wintypes.DWORD),
                 ("dwHighDateTime", wintypes.DWORD)]
 
-# Load kernel32.dll
+# Load kernel32.dll (Windows system library) to work with file times
 kernel32 = ctypes.windll.kernel32
 
-# Define CreateFileW and SetFileTime function prototypes
+# Define function prototypes for interacting with file times in Windows
 CreateFileW = kernel32.CreateFileW
 CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
                         wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
@@ -39,12 +39,13 @@ SetFileTime.restype = wintypes.BOOL
 
 class TimestomperApp:
     def __init__(self, root):
-        self.root = root
-        self.root.title("FileForge")
-        self.root.geometry("650x700")
+        self.root = root   # The main window of the application
+        self.root.title("FileForge")  # Set the window title
+        self.root.geometry("650x700")  # Set the window size
 
-        root.configure(bg='#333333')  # Change the background of the root window
+        root.configure(bg='#333333')  # Set a dark background color for the window
 
+        # Title label in the main window
         label = tk.Label(root, text="Welcome to FileForge!", bg='#333333', fg='white', font=("Arial", 20, "bold"))
         label.pack(padx=10, pady=10) 
 
@@ -53,7 +54,6 @@ class TimestomperApp:
         self.file_path_tab2 = None
         self.file_path_tab3 = None
 
-
         # Suggested timestamp for tab2
         self.suggested_timestamp_tab2 = None
 
@@ -61,11 +61,12 @@ class TimestomperApp:
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Add tabs
+        # Add tabs to the notebook
         self.tab1 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.tab2 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.tab3 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
 
+        # Add the tabs with their titles
         self.notebook.add(self.tab1, text=" Scrambler ")
         self.notebook.add(self.tab2, text=" Timestamp Update ")
         self.notebook.add(self.tab3, text=" Decoy Generator ")
@@ -83,7 +84,7 @@ class TimestomperApp:
         self.create_tab3_widgets()
     
     def create_tab1_widgets(self):
-        # Tab 1 - File Scrambler
+        """Tab 1 - File Scrambler""" 
         self.tab1_label = tk.Label(self.tab1, text="This is the File Scrambler")
         self.tab1_label.grid(pady=10)
 
@@ -100,10 +101,6 @@ class TimestomperApp:
         # Scramble Button
         self.scramble_button = tk.Button(self.tab1, text="Scramble File", command=self.scramble_file, state=tk.DISABLED)
         self.scramble_button.grid(pady=10)
-
-        # Save Button
-        #self.save_button = tk.Button(self.tab1, text="Save Scrambled File", command=self.save_scrambled_file, state=tk.DISABLED)
-        #self.save_button.grid(pady=10)
     
     #File type checking
     def scramble_file(self):
@@ -185,7 +182,6 @@ class TimestomperApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble executable file: {e}")
 
-
     def scramble_docx_file(self): 
         try: 
             # Define the scrambled file path
@@ -230,8 +226,6 @@ class TimestomperApp:
             messagebox.showinfo("Success", f"DOCX file scrambled and saved as {scrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to scramble DOCX file: {e}")
-
-
 
     def scramble_mp4_file(self):
         try:
@@ -300,11 +294,10 @@ class TimestomperApp:
             messagebox.showerror("Error", f"Failed to detect file type: {e}")
             return "Unknown"
 
-#
 #               2nd Tab                #
-#
+
     def create_tab2_widgets(self):
-        """Tab 2 - Select File and Update Timestamp"""
+        """Tab 2 - Timestomper"""
         # File Selection Button for Tab 2
         self.tab2_select_file_button = tk.Button(self.tab2, text="Select File", command=self.select_file_tab2)
         self.tab2_select_file_button.grid(row=0, column=0, padx=5, pady=10)
@@ -371,7 +364,7 @@ class TimestomperApp:
         self.tab2_set_suggested_button.grid(row=9, column=2, columnspan=2, pady=10)
 
     def select_file_tab2(self):
-        """Open a file dialog to select a file in Tab 2 and update the file path."""
+        # Open file dialog to select a file
         self.file_path_tab2 = filedialog.askopenfilename(title="Select File")
         if self.file_path_tab2:
             self.tab2_file_label.config(text=f"Selected: {self.file_path_tab2}")
@@ -384,7 +377,7 @@ class TimestomperApp:
                 )
 
     def calculate_mean_timestamp(self):
-        """Calculate the mean timestamp of all files in the folder containing the selected file, excluding the selected file."""
+        # Calculate the mean timestamp of all other files in the folder containing the selected file (excludes the selected file)
         if not self.file_path_tab2:
             messagebox.showerror("Error", "Please select a file first.")
             return None
@@ -416,7 +409,7 @@ class TimestomperApp:
             return None
         
     def convert_to_filetime(self, input_time):
-        """Convert user input time to FILETIME format (100-nanosecond intervals since 1601)."""
+        # Convert user input time to FILETIME format (100-nanosecond intervals since 1601)
         try:
             # Ensure proper length of the input
             if len(input_time) != 20:
@@ -450,7 +443,7 @@ class TimestomperApp:
             return None    
 
     def update_file_time(self):
-        """Update the file time based on user input."""
+        # Update the file time based on user input
         # Get date from calendar
         selected_date = self.calendar.get_date()
         month, day, year = map(int, selected_date.split('/'))
@@ -483,7 +476,7 @@ class TimestomperApp:
             messagebox.showerror("Error", "Could not open file to modify.")
             return
 
-        # Update the file timestamps if the checkboxes are selected
+        # Update the file timestamps based on selected checkboxes
         if self.creation_var.get():
             SetFileTime(handle, ctypes.pointer(filetime), None, None)
         
@@ -499,7 +492,7 @@ class TimestomperApp:
         messagebox.showinfo("Info", "File timestamps successfully updated.")
 
     def set_suggested_time(self):
-        """Set the suggested time to the input fields."""
+        # Set the suggested time to the input fields
         if not self.suggested_timestamp_tab2:
             messagebox.showerror("Error", "No suggested timestamp available.")
             return
@@ -515,6 +508,9 @@ class TimestomperApp:
         self.minutes_entry.insert(0, self.suggested_timestamp_tab2.strftime('%M'))
         self.seconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%S'))
         self.microseconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%f'))
+
+# Part 3 #
+
     def create_tab3_widgets(self):
         """Tab 3 - Junk Decoy File Generator"""
         # Title Label
@@ -546,19 +542,20 @@ class TimestomperApp:
         self.tab3_status_label.grid(row=4, column=0, columnspan=3, pady=5)
 
     def select_directory_tab3(self):
-        """Open a directory selection dialog for Tab 3."""
+        # Open a directory selection dialog for Tab 3
         directory = filedialog.askdirectory(title="Select Directory")
         if directory:
             self.tab3_directory_entry.delete(0, tk.END)
             self.tab3_directory_entry.insert(0, directory)
 
     def generate_decoy_files(self):
-        """Generate junk decoy files in the specified directory."""
+        # Generate junk decoy files in the specified directory 
         target_directory = self.tab3_directory_entry.get().strip()
         if not os.path.isdir(target_directory):
             messagebox.showerror("Error", "Please select a valid directory.")
             return
 
+        # Validate the number of files to generate
         try:
             num_files = int(self.tab3_num_files_entry.get().strip())
         except ValueError:
@@ -578,7 +575,7 @@ class TimestomperApp:
             messagebox.showerror("Error", f"Failed to create decoy files: {e}")
 
     def create_junk_decoy_files(self, directory, num_files):
-        """Create a specified number of junk decoy files in the target directory."""
+        # Create a specified number of junk decoy files in the target directory
         # List of plausible but slightly suspicious file names
         suspicious_names = [
             "temp_data", "logfile", "update_patch", "sys_driver", "error_dump",
@@ -593,7 +590,7 @@ class TimestomperApp:
             self.create_junk_decoy_file(directory, file_name, file_extension)
 
     def create_junk_decoy_file(self, directory, file_name, file_extension):
-        """Create a single decoy file with random junk content."""
+        # Create a single decoy file with random junk content
         file_size = random.randint(1024, 8192)  # Random size between 1 KB and 8 KB
         decoy_path = os.path.join(directory, f"{file_name}.{file_extension}")
 
@@ -603,10 +600,14 @@ class TimestomperApp:
                 decoy_file.write(content)
         except Exception as e:
             print(f"Error creating decoy file {file_name}: {e}")
+
     def on_close(self): 
+        # Handle window close event
+        # Properly destroy the application window when closed
         self.root.destroy()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = TimestomperApp(root)
-    root.mainloop()
+    root = tk.Tk()  # Initialize the main Tkinter window
+    app = TimestomperApp(root)  # Create an instance of the TimestomperApp
+    root.mainloop()  # Start the Tkinter event loop
+    
