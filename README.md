@@ -37,8 +37,7 @@ Step 6. To run the application: python FileForgeV4.py
 1. Click on the "Scrambler" Tab
 2. Click the "Select File" button to choose a file to scramble.
 3. Select the appropriate file, and the program will auto-detect the file type.
-4. Click "Scramble File" to obfuscate the content of the file.
-5. Click "Save Scrambled File" to save file with the scrambled content.
+4. Click "Scramble File" to obfuscate the content of the file. (Scrambled file will automatically be saved)
 
    
 **Timestamp Update Tab:**
@@ -48,6 +47,13 @@ Step 6. To run the application: python FileForgeV4.py
 4. Use the calendar and time input fields to specify the new timestamps.
 5. Use the "Set Suggested Time" button to fill the boxes with the calculated mean timestamp of the other files in the same directory. (Optional)
 6. Click "Update Time" to apply the new timestamp to the selected file.
+   
+
+**Decoy Generator Tab:**
+1. Click on the "Decoy Generator" Tab
+2. Click the "Browse" button to choose a target directory.
+3. Specify the number of decoy files to generate.
+4. Click "Generate Decoy Files" to generate.
 
 
 # Dependencies:
