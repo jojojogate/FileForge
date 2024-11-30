@@ -5,6 +5,7 @@ import ctypes
 import random
 import zipfile
 import datetime
+import subprocess
 import tkinter as tk
 from PIL import Image
 from tkinter import ttk
@@ -48,6 +49,9 @@ class TimestomperApp:
         # Title label in the main window
         label = tk.Label(root, text="Welcome to FileForge!", bg='#333333', fg='white', font=("Arial", 20, "bold"))
         label.pack(padx=10, pady=10) 
+
+        # Enable access time change setting 
+        self.enable_last_access_tracking()
 
         # Separate file path variables for each tab
         self.file_path_tab1 = None
@@ -508,6 +512,12 @@ class TimestomperApp:
         self.seconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%S'))
         self.microseconds_entry.insert(0, self.suggested_timestamp_tab2.strftime('%f'))
 
+    def enable_last_access_tracking(self): 
+        subprocess.run("fsutil behavior set disablelastaccess 1", shell=True)
+
+    def disable_last_access_tracking(self): 
+        subprocess.run("fsutil behavior set disablelastaccess 0", shell=True)
+
 # Part 3 #
 
     def create_tab3_widgets(self):
@@ -603,6 +613,7 @@ class TimestomperApp:
     def on_close(self): 
         # Handle window close event
         # Properly destroy the application window when closed
+        self.disable_last_access_tracking() 
         self.root.destroy()
 
 if __name__ == "__main__":
