@@ -119,7 +119,6 @@ class TimestomperApp:
         else:
             messagebox.showinfo("Unsupported File", "This file type is not supported for scrambling.")
             return        
-        self.save_button.config(state=tk.NORMAL)  # Enable save button after scrambling
 
     def scramble_text_file(self):
         try:
