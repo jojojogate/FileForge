@@ -479,16 +479,22 @@ class TimestomperApp:
             messagebox.showerror("Error", "Could not open file to modify.")
             return
 
+        # Initialize variables for the different timestamps
+        creation_time = None
+        access_time = None
+        modification_time = None
+
         # Update the file timestamps based on selected checkboxes
         if self.creation_var.get():
-            SetFileTime(handle, ctypes.pointer(filetime), None, None)
-        
+            creation_time = ctypes.pointer(filetime)
         if self.modification_var.get():
-            SetFileTime(handle, None, ctypes.pointer(filetime), None)
-
+            modification_time = ctypes.pointer(filetime)
         if self.access_var.get():
-            SetFileTime(handle, None, None, ctypes.pointer(filetime))
-
+            access_time = ctypes.pointer(filetime)
+    
+        # Now pass the correct values to SetFileTime (creation_time, access_time, modification_time)
+        SetFileTime(handle, creation_time, access_time, modification_time)
+    
         # Close the handle
         kernel32.CloseHandle(handle)
         
