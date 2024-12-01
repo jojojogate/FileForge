@@ -16,6 +16,11 @@ This tool uses a simple GUI built with Tkinter and Pillow, with additional suppo
 2. Timestamp Management
 - Modify file timestamps (creation, modification, access). Edited times are precise to the microseconds to prevent detection of timestomping.
 - Automatically suggest a timestamp based on the average of other files in the same folder to camouflage wanted file.
+3. Decoy Files Generator
+- Generates decoy files that mimic legitimate files, obfuscating sensitive data and preventing forensic detection of tampering.
+4. File Size Randomizer
+- Alter file sizes within typical ranges for their type, helping to conceal irregularities and prevent detection during forensic analysis.
+  
 
 # Installation: (6 Steps)
 
@@ -50,11 +55,18 @@ Step 6. To run the application(run as administrator): python FileForgeV4.py
    
 
 **Decoy Generator Tab:**
-1. Click on the "Decoy Generator" Tab
+1. Click on the "Decoy Generator" Tab 
 2. Click the "Browse" button to choose a target directory.
 3. Specify the number of decoy files to generate.
 4. Click "Generate Decoy Files" to generate.
 
+
+**File Size Randomizer:**
+1. Click on "Select File" button and select file
+2. Leave the mean and standard deviation values blank if you would like to use the default calculated mean and standard deviation values by the tool,
+   else input your own values for the mean or standard deviation values (can input one field and leave the other blank)
+3. Click on the Randomize File Size button to carry out the File Size Randomization
+   
 
 # Dependencies:
 Tkinter: For GUI components.
