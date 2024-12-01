@@ -290,10 +290,7 @@ class TimestomperApp:
 
     def unscramble_image_file(self):
         try:
-            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.png"
-            # Use a reverse operation on the scrambled image
-            # Implement the specific logic if pixel positions were stored during scrambling
-            messagebox.showinfo("Success", f"Image file unscrambled and saved as {unscrambled_path}")
+            messagebox.showinfo("This file type is not supported for unscrambling.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to unscramble image file: {e}")
 
