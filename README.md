@@ -67,5 +67,7 @@ python-docx: For handling .docx files.
 
 pywin32: For manipulating file creation times on Windows.
 
+python numpy
+
 # Known Issues:
 Some file types (e.g., encrypted files) might not be supported for scrambling.
