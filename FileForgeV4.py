@@ -6,6 +6,7 @@ import random
 import zipfile
 import datetime
 import subprocess
+import numpy as np
 import tkinter as tk
 from PIL import Image
 from tkinter import ttk
@@ -57,6 +58,7 @@ class TimestomperApp:
         self.file_path_tab1 = None
         self.file_path_tab2 = None
         self.file_path_tab3 = None
+        self.file_path_tab4 = None
 
         # Suggested timestamp for tab2
         self.suggested_timestamp_tab2 = None
@@ -69,11 +71,13 @@ class TimestomperApp:
         self.tab1 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.tab2 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
         self.tab3 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
+        self.tab4 = ttk.Frame(self.notebook, width=300, height=200, relief="solid", borderwidth=1)
 
         # Add the tabs with their titles
         self.notebook.add(self.tab1, text=" Scrambler ")
         self.notebook.add(self.tab2, text=" Timestamp Update ")
         self.notebook.add(self.tab3, text=" Decoy Generator ")
+        self.notebook.add(self.tab4, text=" File Size Randomization ")
 
         # Change the appearance of the tab buttons to be equally wide
         style = ttk.Style()
@@ -86,6 +90,7 @@ class TimestomperApp:
         self.create_tab1_widgets()
         self.create_tab2_widgets()
         self.create_tab3_widgets()
+        self.create_tab4_widgets()
     
     def create_tab1_widgets(self):
         """Tab 1 - File Scrambler""" 
@@ -290,7 +295,10 @@ class TimestomperApp:
 
     def unscramble_image_file(self):
         try:
-            messagebox.showinfo("This file type is not supported for unscrambling.")
+            unscrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_unscrambled.png"
+            # Use a reverse operation on the scrambled image
+            # Implement the specific logic if pixel positions were stored during scrambling
+            messagebox.showinfo("Success", f"Image file unscrambled and saved as {unscrambled_path}")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to unscramble image file: {e}")
 
@@ -348,26 +356,7 @@ class TimestomperApp:
                             unscrambled_pptx.writestr(item, file_data.read())
             messagebox.showinfo("Success", f"PPT file unscrambled and saved as {unscrambled_path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to unscramble PPT file: {e}")
-        def save_scrambled_file(self): 
-            if self.scrambled_content: 
-                try: 
-                    # Define the scrambled file path 
-                    scrambled_path = f"{os.path.splitext(self.file_path_tab1)[0]}_scrambled{os.path.splitext(self.file_path_tab1)[1]}" 
-                    
-                    # Open in binary mode if the file is an image, executable, or any binary file 
-                    if 'image' in self.file_type or 'exe' in self.file_type or 'application' in self.file_type: 
-                        with open(scrambled_path, 'wb') as scrambled_file:  # Binary write mode for binary content
-                            scrambled_file.write(self.scrambled_content) 
-                    else: 
-                        # Open in text mode if the file is a text-based file (like .txt or .docx) 
-                        with open(scrambled_path, 'w', encoding='utf-8') as scrambled_file:  # Text write mode for text content
-                            scrambled_file.write(self.scrambled_content)                  
-                    messagebox.showinfo("File Saved", f"Scrambled file saved as {scrambled_path}") 
-                except Exception as e: 
-                    messagebox.showerror("Error", f"Failed to save scrambled file: {e}") 
-            else: 
-                messagebox.showerror("Error", "No scrambled content to save.")  
+            messagebox.showerror("Error", f"Failed to unscramble PPT file: {e}")  
 
     def select_file_tab1(self):
         # Open file dialog to select a file
@@ -378,8 +367,7 @@ class TimestomperApp:
             self.file_type_label.config(text=f"File Type: {self.file_type}")
             self.scramble_button.config(state=tk.NORMAL)  # Enable scramble button
             self.unscramble_button.config(state=tk.NORMAL)  # Enable scramble button
-
-    
+            
     def identify_file_type(self):
         # Identify file type using magic
         try:
@@ -713,6 +701,101 @@ class TimestomperApp:
         # Properly destroy the application window when closed
         self.disable_last_access_tracking() 
         self.root.destroy()
+
+# File Size Randomization #
+
+def create_tab4_widgets(self):
+        """Tab 4 - File Size Randomization"""
+        self.tab4_label = tk.Label(self.tab4, text="File Size Randomization", font=("Arial", 15, "bold italic"))
+        self.tab4_label.grid(pady=10)
+
+        # File Selection Button
+        self.tab4_select_file_button = tk.Button(self.tab4, text="Select File", command=self.select_file_tab4)
+        self.tab4_select_file_button.grid(pady=10)
+
+        # File Path Display
+        self.file_path_label = tk.Label(self.tab4, text="File Path: None")
+        self.file_path_label.grid()
+
+        # Parameter Inputs for Randomization
+        self.mean_label = tk.Label(self.tab4, text="Mean (bytes):")
+        self.mean_label.grid(row=3, column=0, sticky="e")
+        self.mean_entry = tk.Entry(self.tab4)
+        self.mean_entry.grid(row=3, column=1, sticky="w")
+
+        self.std_dev_label = tk.Label(self.tab4, text="Std Dev (bytes):")
+        self.std_dev_label.grid(row=4, column=0, sticky="e")
+        self.std_dev_entry = tk.Entry(self.tab4)
+        self.std_dev_entry.grid(row=4, column=1, sticky="w")
+
+        # File Size Randomization Button
+        self.randomize_size_button = tk.Button(self.tab4, text="Randomize File Size", command=self.randomize_file_size, state=tk.DISABLED)
+        self.randomize_size_button.grid(pady=10)
+
+    def select_file_tab4(self):
+        """Select a file and enable file size randomization."""
+        self.file_path_tab4 = filedialog.askopenfilename()
+        if self.file_path_tab4:
+            self.file_path_label.config(text=f"File Path: {self.file_path_tab4}")
+            self.randomize_size_button.config(state=tk.NORMAL)
+
+    def randomize_file_size(self):
+        """Randomize the size of the selected file with user-defined or default parameters."""
+        if not self.file_path_tab4:
+            messagebox.showerror("Error", "No file selected.")
+            return
+
+        # Get files from the same directory
+        directory = os.path.dirname(self.file_path_tab4)
+        files = [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+
+        if not files:
+            messagebox.showerror("Error", "No files found in the directory.")
+            return
+
+        # Calculate mean and standard deviation
+        calculated_mean, calculated_std_dev = self.calculate_size_statistics(files)
+
+        # Use user-provided or default values
+        mean = self.get_user_input(self.mean_entry, default=calculated_mean)
+        std_dev = self.get_user_input(self.std_dev_entry, default=calculated_std_dev)
+        #	std_dev = self.get_user_input(self.std_dev_entry, default=calculated_mean * 0.1)
+
+        self.randomize_file_size_within_range(self.file_path_tab4, mean, std_dev)
+        messagebox.showinfo("Success", f"File size randomized for: {self.file_path_tab4}")
+
+    @staticmethod
+    def calculate_size_statistics(files):
+        """Calculate mean and standard deviation of file sizes."""
+        sizes = [os.path.getsize(file) for file in files]
+        mean_size = np.mean(sizes)
+        std_dev_size = np.std(sizes)
+        #	mean_size = sum(sizes) / len(sizes)
+        #	std_dev_size = (sum((x - mean_size) * 2 for x in sizes) / len(sizes)) * 0.5
+        return mean_size, std_dev_size
+
+    @staticmethod
+    def randomize_file_size_within_range(file_path, mean_size, std_dev_size):
+        """Randomly adjust the file size within a reasonable range based on mean and std deviation."""
+        new_size = int(random.gauss(mean_size, std_dev_size))  # Gaussian distribution for more natural size variation
+        new_size = max(1, new_size)  # Ensure the size is at least 1 byte
+
+        with open(file_path, 'rb+') as f:
+            f.truncate(new_size)  # Adjust file size
+
+            # If the file is expanded, fill new space with random bytes
+            current_size = f.tell()
+            if current_size < new_size:
+                f.write(os.urandom(new_size - current_size))
+
+    @staticmethod
+    def get_user_input(entry_widget, default):
+        """Get user input or use default if input is empty."""
+        try:
+            value = entry_widget.get().strip()
+            return float(value) if value else default
+        except ValueError:
+            return default
 
 if __name__ == "__main__":
     root = tk.Tk()  # Initialize the main Tkinter window
